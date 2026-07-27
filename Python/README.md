@@ -86,6 +86,41 @@ Track selected subjects:
 The command prints one complete sample every 20 Vicon frames. Press `Ctrl+C`
 to stop.
 
+## Check an aircraft rigid body
+
+Define the aircraft root segment with X toward the nose, Y toward the left
+wing, and Z upward. Then check its position, attitude, and angular-velocity
+directions:
+
+```powershell
+.\.venv\Scripts\python.exe .\run_vicon_orientation_check.py "Aircraft"
+```
+
+The check guides six movements. Forward, left, and upward motion must be
+positive along X, Y, and Z. With the right-handed X-forward, Y-left, Z-up
+frame, right roll is positive about X, while nose-up pitch and nose-right yaw
+are negative about Y and Z. Use movements of at least 0.15 m or 8 degrees;
+rotations must exceed 0.10 rad/s.
+
+To compare a stationary aircraft with a known arena pose, run:
+
+```powershell
+.\.venv\Scripts\python.exe .\run_vicon_frame_calibration.py "Aircraft" `
+    --known-position-m 0 0 0 `
+    --known-euler-deg 0 0 0
+```
+
+Replace the known position and Euler XYZ angles with the physical reference
+pose, using the same axis directions as the Vicon stream. The command reports
+the mean pose and the wrapped measured-minus-reference error. This is a
+single-pose comparison, not a coordinate-frame transform. It does not change
+the Vicon configuration, write a calibration file, or transform the states
+returned by `ViconTracker`. A reported error can come from either the Vicon
+arena frame or the selected aircraft's root-segment definition.
+
+Each check uses one aircraft at a time. Repeat it for another aircraft when
+needed; normal tracking remains synchronized across all requested subjects.
+
 ## Use from another script
 
 ```python

@@ -52,6 +52,53 @@ Disconnect when finished:
 delete(tracker);
 ```
 
+## Check an aircraft rigid body
+
+Run the orientation check once for each aircraft subject:
+
+```matlab
+passed = runViconOrientationCheck("Aircraft");
+```
+
+At the reference pose, align the nose with +X, the left wing with +Y, and
+the top of the aircraft with +Z. The check then guides six motions. Forward,
+left, and up must increase X, Y, and Z. Right roll must increase roll and
+`p`; nose-up pitch must decrease pitch and `q`; right yaw must decrease yaw
+and `r`. A translation passes at 0.15 m. A rotation passes at 8 degrees and
+0.10 rad/s.
+
+Use another server or change the time allowed for each motion with
+name-value arguments:
+
+```matlab
+passed = runViconOrientationCheck( ...
+    "Aircraft", ...
+    Host="192.168.0.100:801", ...
+    MotionDurationSeconds=4.0);
+```
+
+Compare a stationary aircraft with a known pose in the arena frame:
+
+```matlab
+knownPositionM = [1.0, 0.0, 0.5];
+knownEulerXYZDeg = [0.0, 0.0, 90.0];
+result = runViconFrameCalibration( ...
+    "Aircraft", ...
+    knownPositionM, ...
+    knownEulerXYZDeg);
+```
+
+`knownPositionM` is `[X Y Z]` in metres and `knownEulerXYZDeg` is
+`[roll pitch yaw]` in degrees, both in the configured global Vicon frame.
+The returned errors are measured minus reference. This is a single-pose
+comparison, not a coordinate-frame transform; it does not change the Vicon
+configuration or subsequent tracking data. Use `SampleCount=200` to set the
+number of visible frames to average.
+
+These checks select one aircraft because the user moves it by hand. Normal
+tracking remains available for multiple synchronized rigid bodies through
+`viconTracker`.
+
 ## Returned state
 
 Each row of `states` represents the subject at the same row of

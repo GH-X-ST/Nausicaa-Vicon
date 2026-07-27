@@ -40,13 +40,13 @@
 
 ## About
 
-Nausicaa-Vicon provides compact Python and MATLAB interfaces for the Vicon system in the Imperial College London flight arena. Both clients acquire one server frame at a time, keeping every requested rigid body synchronised while returning its global pose and body-frame motion state.
+Nausicaa-Vicon provides compact Python and MATLAB interfaces for the Vicon system in the Imperial College London flight arena. Both clients acquire one server frame at a time, keeping every requested rigid body synchronised while returning the same pose, motion, timing, latency, visibility, and frame information.
 
-The implementations follow their host languages. Python returns a rich frame object with timing, latency, occlusion, quaternion, and global-velocity information. MATLAB returns the conventional 12-state matrix `[x, y, z, roll, pitch, yaw, u, v, w, p, q, r]` with row validity and frame number. Both folders also provide corresponding aircraft orientation and stationary reference-pose checks.
+The implementations use language-native containers while following the same logic. Each visible state contains global position, Euler and quaternion attitude, global and body linear velocity, body angular velocity, and motion validity. Both folders also provide corresponding aircraft orientation and stationary reference-pose checks.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/GH-X-ST/Nausicaa/main/A_Miscellaneous/A_Readme/3.2.2.jpg" alt="Selected flight test sensing, computation, and command architecture" width="100%"><br>
-  <sup><em>Selected flight test sensing, computation, and command architecture. This repository isolates only the reusable Vicon sensing interface.</em></sup>
+  <sup><em>Selected flight test sensing, computation, and command architecture.</em></sup>
 </p>
 
 ---
@@ -55,8 +55,10 @@ The implementations follow their host languages. Python returns a rich frame obj
 
 | Interface | Returned data | Entry point |
 |---|---|---|
-| Python | Frame number and rate, capture-time estimate, latency, visible and occluded subjects, position, Euler and quaternion attitude, global and body linear velocity, body angular velocity, and motion validity; derivatives use a configurable one-pole low-pass filter | [`Python/vicon_tracker.py`](Python/vicon_tracker.py) |
-| MATLAB | One synchronised N-by-12 state matrix with unfiltered finite-difference body velocities, validity by subject, and frame number | [`MATLAB/viconTracker.m`](MATLAB/viconTracker.m) |
+| Python | `ViconFrame` with a subject-keyed state dictionary and an occluded-subject tuple | [`Python/vicon_tracker.py`](Python/vicon_tracker.py) |
+| MATLAB | Frame structure with a subject-keyed state dictionary and an occluded-subject string array | [`MATLAB/viconTracker.m`](MATLAB/viconTracker.m) |
+
+Both return frame number and rate, capture-time estimate, latency, visible and occluded subjects, position, Euler and quaternion attitude, global and body linear velocity, body angular velocity, and motion validity. Derivatives use the same configurable one-pole low-pass filter.
 
 Positions use metres, angles use radians, linear velocities use metres per second, and angular velocities use radians per second. The configured axes are X forward, Y left, and Z up. Position and attitude remain in the Vicon global frame; body velocities use the subject root-segment frame. No object-specific correction or arena transform is applied.
 
@@ -106,18 +108,18 @@ Omit the subject names to track every subject available when the connection open
 
 ### MATLAB
 
-In a fresh MATLAB session opened from the repository root, read once to initialise the finite-difference motion estimate before acquiring the complete state:
+In a fresh MATLAB session opened from the repository root:
 
 ```matlab
 cd MATLAB
 dotnetenv("framework")
 tracker = viconTracker(["Object A", "Object B"]);
-tracker.read();
-[states, valid, frameNumber] = tracker.read();
+frameData = tracker.read();
+state = frameData.states("Object A");
 delete(tracker);
 ```
 
-Call `viconTracker` without subject names to track every subject available when the connection opens.
+Call `viconTracker` without subject names to track every subject available when the connection opens, or run `runViconTracker()` to display complete streaming states until `Ctrl+C`.
 
 ### Check an aircraft rigid body
 

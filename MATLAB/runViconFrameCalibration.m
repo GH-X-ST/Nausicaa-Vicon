@@ -7,23 +7,22 @@ function result = runViconFrameCalibration(subjectName, knownPositionM, knownEul
 %   knownPositionM is [X Y Z] in metres. knownEulerXYZDeg is
 %   [roll pitch yaw] in degrees. Both use the configured global Vicon frame.
 %   Host sets the Vicon server address. SampleCount sets the number of
-%   visible frames to average. The function prompts the user and prints the
-%   comparison without changing the Vicon configuration.
+%   visible frames to average. The function prints the comparison without
+%   changing the Vicon configuration.
 
     arguments
         subjectName (1, 1) string
         knownPositionM (1, 3) double {mustBeFinite}
         knownEulerXYZDeg (1, 3) double {mustBeFinite}
-        options.Host (1, 1) string = "192.168.0.100:801"
+        options.Host (1, 1) string = viconTracker.DefaultHost
         options.SampleCount (1, 1) double {mustBeFinite, mustBeInteger, mustBePositive} = 200
     end
 
     tracker = viconTracker(subjectName, Host=options.Host);
     trackerCleanup = onCleanup(@() delete(tracker));
 
-    fprintf("Hold the aircraft still at the specified reference pose.\n");
-    input("Press Enter to collect samples.", "s");
-    [positionMean, eulerMean] = meanPose(tracker, options.SampleCount);
+    [positionMean, eulerMean] = meanPose( ...
+        tracker, subjectName, options.SampleCount);
     positionError = positionMean - knownPositionM;
     eulerError = wrapAngles(eulerMean-deg2rad(knownEulerXYZDeg));
 
@@ -40,19 +39,19 @@ function result = runViconFrameCalibration(subjectName, knownPositionM, knownEul
         rad2deg(result.eulerXYZErrorRad));
 end
 
-function [positionMean, eulerMean] = meanPose(tracker, sampleCount)
+function [positionMean, eulerMean] = meanPose(tracker, subjectName, sampleCount)
     positionSum = zeros(1, 3);
     eulerSineSum = zeros(1, 3);
     eulerCosineSum = zeros(1, 3);
     collectedCount = 0;
 
     while collectedCount < sampleCount
-        states = tracker.read();
-        pose = states(1, 1:6);
-        if all(isfinite(pose))
-            positionSum = positionSum + pose(1:3);
-            eulerSineSum = eulerSineSum + sin(pose(4:6));
-            eulerCosineSum = eulerCosineSum + cos(pose(4:6));
+        frameData = tracker.read();
+        if isKey(frameData.states, subjectName)
+            state = frameData.states(subjectName);
+            positionSum = positionSum + state.positionM;
+            eulerSineSum = eulerSineSum + sin(state.eulerXYZRad);
+            eulerCosineSum = eulerCosineSum + cos(state.eulerXYZRad);
             collectedCount = collectedCount + 1;
         end
     end

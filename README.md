@@ -51,14 +51,18 @@ The implementations use language-native containers while following the same logi
 
 ---
 
-## Interfaces
+## Capabilities and Sources
 
-| Interface | Returned data | Entry point |
-|---|---|---|
-| Python | `ViconFrame` with a subject-keyed state dictionary and an occluded-subject tuple | [`Python/vicon_tracker.py`](Python/vicon_tracker.py) |
-| MATLAB | Frame structure with a subject-keyed state dictionary and an occluded-subject string array | [`MATLAB/viconTracker.m`](MATLAB/viconTracker.m) |
+| Capability | Provider | Python source | MATLAB source |
+|---|---|---|---|
+| Synchronized frames, frame number and rate, and latency | Vicon DataStream SDK | [`ViconTracker.read()`](Python/vicon_tracker.py) | [`viconTracker.read()`](MATLAB/viconTracker.m) |
+| Global position, Euler attitude, quaternion, and occlusion | Vicon DataStream SDK | [`_read_pose()`](Python/vicon_tracker.py) | [`readPose()`](MATLAB/viconTracker.m) |
+| Multi-object frame packaging and unit conversion | This repository | [`ViconFrame` and `RigidBodyState`](Python/vicon_tracker.py) | [Frame structure and state dictionary](MATLAB/viconTracker.m) |
+| Derived velocities, filtering, and body-frame transformation | This repository | [`_state_from_pose()`](Python/vicon_tracker.py) | [`stateFromPose()`](MATLAB/viconTracker.m) |
+| Continuous state display | This repository | [`vicon_tracker.py`](Python/vicon_tracker.py) | [`runViconTracker.m`](MATLAB/runViconTracker.m) |
+| Orientation and reference-pose checks | This repository | [Python checks](Python/README.md#check-an-aircraft-rigid-body) | [MATLAB checks](MATLAB/README.md#check-an-aircraft-rigid-body) |
 
-Both return frame number and rate, capture-time estimate, latency, visible and occluded subjects, position, Euler and quaternion attitude, global and body linear velocity, body angular velocity, and motion validity. Derivatives use the same configurable one-pole low-pass filter.
+Both implementations return the same information and apply the same processing logic. Python represents a frame with the `ViconFrame` and `RigidBodyState` dataclasses, while MATLAB uses a scalar frame structure.
 
 Positions use metres, angles use radians, linear velocities use metres per second, and angular velocities use radians per second. The configured axes are X forward, Y left, and Z up. Position and attitude remain in the Vicon global frame; body velocities use the subject root-segment frame. No object-specific correction or arena transform is applied.
 

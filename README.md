@@ -44,7 +44,7 @@ Nausicaa-Vicon provides compact Python and MATLAB interfaces for the Vicon syste
 
 The implementations use language-native containers while following the same logic. Each visible state contains global position, Euler and quaternion attitude, global and body linear velocity, body angular velocity, and motion validity. Both folders also provide corresponding aircraft orientation and stationary reference-pose checks.
 
-For applications that also require command output, the optional [Arduino Nano 33 IoT bridge](Arduino/README.md) converts eight numbered RC channel commands from Python or MATLAB into PPM intended for a compatible transmitter trainer input. It remains independent of Vicon tracking, allowing each application to define its own controller and channel assignments.
+For applications that also require command output, the optional [Arduino Nano 33 IoT bridge](Arduino/README.md) converts eight RC channel commands from Python or MATLAB into PPM intended for a compatible transmitter trainer input. It remains independent of Vicon tracking, allowing each application to define its own controller and channel assignments.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/GH-X-ST/Nausicaa/main/A_Miscellaneous/A_Readme/3.2.2.jpg" alt="Selected flight test sensing, computation, and command architecture" width="100%"><br>
